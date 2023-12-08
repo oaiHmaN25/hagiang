@@ -8,7 +8,6 @@ import "swiper/css/pagination";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import { motion } from "framer-motion";
-import SingleTestimonial from "./SingleTestimonial";
 import { testimonialData } from "./testimonialData";
 
 const Testimonial = () => {
@@ -73,9 +72,7 @@ const Testimonial = () => {
               }}
             >
               {testimonialData.map((review) => (
-                <SwiperSlide key={review?.id}>
-                  <SingleTestimonial review={review} />
-                </SwiperSlide>
+                <SwiperSlide key={review?.id}></SwiperSlide>
               ))}
             </Swiper>
           </div>
