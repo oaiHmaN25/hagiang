@@ -12,17 +12,26 @@ import {
   DropdownTrigger,
 } from "@nextui-org/react";
 import { useEdgesState, useNodesState } from "reactflow";
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
+interface File {
+  _id: string;
+  fileName: string;
+  chart: {
+    nodes: any[]; // Define the type for your nodes
+    edges: any[]; // Define the type for your edges
+  };
+}
+const fetcher = (...args: Parameters<typeof fetch>) =>
+  fetch(...args).then((res) => res.json());
 
 export default function Header() {
-  const [nodes, setNodes] = useNodesState();
-  const [edges, setEdges] = useEdgesState();
-  const [data, setData] = useState([]);
+  const [nodes, setNodes] = useNodesState([]);
+  const [edges, setEdges] = useEdgesState([]);
+  const [data, setData] = useState<File[]>([]);
   const { user, error, isLoading } = useUser();
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch(`/api/chart?email=${user?.email}`, fetcher);
-      const data = await response.json();
+      const data = await fetcher(`/api/chart?email=${user?.email}`);
       if (data.user.files) {
         setData(data.user.files);
       }

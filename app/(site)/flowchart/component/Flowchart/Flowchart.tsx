@@ -14,6 +14,7 @@ import ReactFlow, {
   ControlButton,
   useReactFlow,
   useNodes,
+  BackgroundVariant,
 } from "reactflow";
 import debounce from "lodash.debounce";
 import "reactflow/dist/style.css";
@@ -22,8 +23,8 @@ const initialNodes = [];
 const initialEdges = [];
 
 export default function Flowchart() {
-  const inputChangeTitle = useRef(null);
-  const connectingNodeId = useRef(null);
+  const inputChangeTitle = useRef<HTMLInputElement>(null);
+  const connectingNodeId = useRef<string | null>(null);
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
   const onNodesChange = useCallback((changes) => {
@@ -39,21 +40,19 @@ export default function Flowchart() {
       inputChangeTitle.current.disabled = false;
       inputChangeTitle.current.value = node.data.label;
       inputChangeTitle.current.focus();
-      inputChangeTitle.current.select();
-      inputChangeTitle.current.addEventListener("blur", () => {
+      inputChangeTitle.current?.addEventListener("blur", () => {
         const newNodesIndex = nodes.findIndex((n) => n.id === node.id);
-        // Create a new object with the updated label
         const newNodes = {
           ...nodes[newNodesIndex],
           data: {
             ...nodes[newNodesIndex].data,
-            label: inputChangeTitle.current.value,
+            label: inputChangeTitle.current?.value,
           },
         };
         const newNodesArray = [...nodes];
         newNodesArray.splice(newNodesIndex, 1, newNodes);
         setNodes(newNodesArray);
-        inputChangeTitle.current.disabled = true;
+        if (inputChangeTitle.current) inputChangeTitle.current.disabled = true;
       });
     }
   };
@@ -108,7 +107,11 @@ export default function Flowchart() {
 
         setNodes((nds) => nds.concat(newNode));
         setEdges((eds) =>
-          eds.concat({ id, source: connectingNodeId.current, target: id }),
+          eds.concat({
+            id,
+            source: connectingNodeId.current as string,
+            target: id,
+          }),
         );
       }
     },
@@ -163,7 +166,7 @@ export default function Flowchart() {
             />
           </ControlButton>
         </Controls>
-        <Background variant="dots" gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
     </div>
   );
