@@ -1,5 +1,4 @@
 "use client";
-import useSWR from "swr";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import React, { useEffect, useState } from "react";
 import "react-edit-text/dist/index.css";
@@ -11,42 +10,45 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from "@nextui-org/react";
-import { useEdgesState, useNodesState } from "reactflow";
+import { useDispatch, useSelector } from "react-redux";
+import { chartSlice } from "@/redux/slice/chartSlice";
 
-interface File {
-  _id: string;
-  fileName: string;
+interface RootState {
   chart: {
-    nodes: any[]; // Define the type for your nodes
-    edges: any[]; // Define the type for your edges
+    flowFunc: any;
+    chartData: any[];
+    currentFile: number;
   };
 }
+
 const fetcher = (...args: Parameters<typeof fetch>) =>
   fetch(...args).then((res) => res.json());
+const { setChartData, setCurrentFile } = chartSlice.actions;
 
 export default function Header() {
-  const [nodes, setNodes] = useNodesState([]);
-  const [edges, setEdges] = useEdgesState([]);
-  const [data, setData] = useState<File[]>([]);
+  const [currentFileIndex, setCurrentFileIndex] = useState<number>(0);
+  const dispatch = useDispatch();
+  const chartData = useSelector((state: RootState) => state.chart.chartData);
+  const flowFunc = useSelector((state: RootState) => state.chart.flowFunc);
+
   const { user, error, isLoading } = useUser();
   useEffect(() => {
     const fetchData = async () => {
       const data = await fetcher(`/api/chart?email=${user?.email}`);
       if (data.user.files) {
-        setData(data.user.files);
+        dispatch(setChartData(data.user.files));
       }
     };
     fetchData();
   }, [user]);
   useEffect(() => {
-    console.log(data);
-    if (data.length > 0) {
-      const nodes = data[0].chart.nodes;
-      const edges = data[0].chart.edges;
-      setNodes(nodes);
-      setEdges(edges);
+    if (chartData.length > 0) {
+      const nodes = chartData[currentFileIndex].chart.nodes;
+      const edges = chartData[currentFileIndex].chart.edges;
+      if (flowFunc) flowFunc.setNodes(nodes);
+      flowFunc.setEdges(edges);
     }
-  }, [data]);
+  }, [chartData, currentFileIndex]);
   return (
     <>
       <div className="flex w-full items-center gap-3">
@@ -58,15 +60,35 @@ export default function Header() {
             <Button variant="bordered">Files</Button>
           </DropdownTrigger>
           <DropdownMenu aria-label="Static Actions">
-            {data.map((item) => (
-              <DropdownItem key={item._id}>{item.fileName}</DropdownItem>
+            {chartData.map((item, index) => (
+              <DropdownItem
+                key={item._id}
+                onClick={() => {
+                  setCurrentFileIndex(index);
+                  dispatch(setCurrentFile(item));
+                }}
+              >
+                {item.fileName}
+              </DropdownItem>
             ))}
           </DropdownMenu>
         </Dropdown>
       </div>
       <div className="flex w-full items-center justify-between">
         <EditText
-          defaultValue="Untitled Flowchart"
+          defaultValue={
+            chartData[currentFileIndex]
+              ? chartData[currentFileIndex].fileName
+              : "Untitled"
+          }
+          onSave={({ value }) => {
+            const newChartData = [...chartData];
+            newChartData[currentFileIndex] = {
+              ...newChartData[currentFileIndex],
+              fileName: value,
+            };
+            dispatch(setChartData(newChartData));
+          }}
           style={{
             outline: "none",
             width: "200px",

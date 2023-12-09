@@ -18,15 +18,30 @@ import ReactFlow, {
 } from "reactflow";
 import debounce from "lodash.debounce";
 import "reactflow/dist/style.css";
+import { useDispatch, useSelector } from "react-redux";
+import { chartSlice } from "@/redux/slice/chartSlice";
 
 const initialNodes = [];
 const initialEdges = [];
-
+interface RootState {
+  chart: {
+    flowFunc: any;
+    chartData: any[];
+    currentFile: number;
+  };
+}
+const { setFlowFunc, setChartData } = chartSlice.actions;
 export default function Flowchart() {
+  const dispatch = useDispatch();
+  const currentFile = useSelector(
+    (state: RootState) => state.chart.currentFile,
+  );
+  const chartData = useSelector((state: RootState) => state.chart.chartData);
   const inputChangeTitle = useRef<HTMLInputElement>(null);
   const connectingNodeId = useRef<string | null>(null);
   const [nodes, setNodes] = useNodesState(initialNodes);
   const [edges, setEdges] = useEdgesState(initialEdges);
+  dispatch(setFlowFunc({ setNodes, setEdges }));
   const onNodesChange = useCallback((changes) => {
     return setNodes((nds) => applyNodeChanges(changes, nds));
   }, []);
@@ -77,7 +92,6 @@ export default function Flowchart() {
 
   const { screenToFlowPosition } = useReactFlow();
   const onConnect = useCallback((params) => {
-    // reset the start node on connections
     connectingNodeId.current = null;
     setEdges((eds) => addEdge(params, eds));
   }, []);
@@ -93,7 +107,6 @@ export default function Flowchart() {
       const targetIsPane = event.target.classList.contains("react-flow__pane");
 
       if (targetIsPane) {
-        // we need to remove the wrapper bounds, in order to get the correct position
         const id = uuidv4();
         const newNode = {
           id,
@@ -118,6 +131,20 @@ export default function Flowchart() {
     [screenToFlowPosition],
   );
 
+  const handleSaveFlow = () => {
+    setTimeout(() => {
+      const chartDataSave = { nodes, edges };
+      const newChartData = [...chartData];
+      newChartData[currentFile] = {
+        ...newChartData[currentFile],
+        chart: chartDataSave,
+      };
+      dispatch(setChartData(newChartData));
+    }, 500);
+  };
+
+  const handleSaveFlowDebounce = debounce(handleSaveFlow, 1000);
+
   return (
     <div style={{ width: "100%", height: "70vh", border: "1px solid white" }}>
       <ReactFlow
@@ -128,7 +155,8 @@ export default function Flowchart() {
         onConnect={onConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
-        onNodeClick={handleChangeTitleNode}
+        onNodeDoubleClick={handleChangeTitleNode}
+        onNodeDragStop={handleSaveFlowDebounce}
         fitView
         fitViewOptions={{ padding: 2 }}
         nodeOrigin={[0.5, 0]}

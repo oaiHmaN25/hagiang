@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "baseUrl": ".",
     "allowJs": true,
     "skipLibCheck": true,
@@ -24,10 +20,8 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*",
-      ],
-      "react": [ "./node_modules/@types/react" ]
+      "@/*": ["./*"],
+      "react": ["./node_modules/@types/react"]
     },
     "strictNullChecks": true
   },
@@ -35,10 +29,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "app/(site)/flowchart/component/Header/Header.jsx",
+    "app/(site)/flowchart/component/Flowchart/Flowchart.jsx"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
- 
