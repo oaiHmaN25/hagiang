@@ -3,7 +3,9 @@ import User from "@/models/chart";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
-  const { email, title, files } = await request.json();
+  await connectMongoDB();
+  const requestBody = await request.json();
+  const { email, title, files } = requestBody;
   if (!title || !email || !files) {
     return NextResponse.json(
       { message: "Title, email and files are required" },
@@ -11,12 +13,11 @@ export async function POST(request) {
     );
   }
   const data = { title, email, files };
-  await connectMongoDB();
 
   let doc = await User.findOne({ email: email });
-
   if (doc) {
     doc.title = title;
+
     doc.files.push(...files);
     await doc.save();
   } else {
@@ -63,4 +64,12 @@ Sửa file: PUT /idFile?email=email (body: {
     edges:...
   }
 })
+*/
+
+/*
+1. Set lại state khi thực hiện các thay đổi: thêm node, xóa node (Done)
+2. Post file khi thêm file mới (Done)
+3. Put file khi sửa đổi file, vd: thêm node, thêm edge, xóa node, xóa edge, thay đổi tên file,...
+4. Delete file khi xóa file
+5. Giật do thay đổi vị trí của node bị set lại state
 */

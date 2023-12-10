@@ -43,10 +43,14 @@ const chartSchema = new Schema(
   { _id: false },
 );
 
-const fileSchema = new Schema({
-  fileName: String,
-  chart: chartSchema,
-});
+const fileSchema = new Schema(
+  {
+    idFile: String,
+    fileName: String,
+    chart: chartSchema,
+  },
+  { _id: false },
+);
 
 const userSchema = new Schema(
   {

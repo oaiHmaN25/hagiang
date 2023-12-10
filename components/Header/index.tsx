@@ -13,7 +13,6 @@ const Header = () => {
   const [stickyMenu, setStickyMenu] = useState(false);
   const { user, error, isLoading } = useUser();
 
-  // if (isLoading) return <div>Loading...</div>;
   // if (error) return <div>{error.message}</div>;
   const pathUrl = usePathname();
 
@@ -167,12 +166,18 @@ const Header = () => {
                 </Link>
               </>
             ) : (
-              <Link
-                href="/api/auth/login"
-                className="text-regular font-medium text-waterloo hover:text-primary"
-              >
-                Sign In
-              </Link>
+              <>
+                {isLoading ? (
+                  <p>Loading...</p>
+                ) : (
+                  <Link
+                    href="/api/auth/login"
+                    className="text-regular font-medium text-waterloo hover:text-primary"
+                  >
+                    Sign In
+                  </Link>
+                )}
+              </>
             )}
           </div>
         </div>

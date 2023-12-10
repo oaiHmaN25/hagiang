@@ -1,6 +1,6 @@
 "use client";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import "react-edit-text/dist/index.css";
 import { EditText } from "react-edit-text";
 import {
@@ -11,8 +11,9 @@ import {
   DropdownTrigger,
 } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
+import { v4 as uuidv4 } from "uuid";
+import { fetchData, postFile, putFile } from "@/app/service/servicesApi";
 import { chartSlice } from "@/redux/slice/chartSlice";
-
 interface RootState {
   chart: {
     flowFunc: any;
@@ -21,8 +22,6 @@ interface RootState {
   };
 }
 
-const fetcher = (...args: Parameters<typeof fetch>) =>
-  fetch(...args).then((res) => res.json());
 const { setChartData, setCurrentFile } = chartSlice.actions;
 
 export default function Header() {
@@ -33,13 +32,7 @@ export default function Header() {
 
   const { user, error, isLoading } = useUser();
   useEffect(() => {
-    const fetchData = async () => {
-      const data = await fetcher(`/api/chart?email=${user?.email}`);
-      if (data.user.files) {
-        dispatch(setChartData(data.user.files));
-      }
-    };
-    fetchData();
+    fetchData(user, dispatch, setChartData);
   }, [user]);
   useEffect(() => {
     if (chartData.length > 0) {
@@ -49,10 +42,27 @@ export default function Header() {
       flowFunc.setEdges(edges);
     }
   }, [chartData, currentFileIndex]);
+
+  const handleNewFile = async () => {
+    const newChartData = [...chartData];
+    const newFile = {
+      idFile: uuidv4(),
+      fileName: "Untitled File",
+      chart: {
+        nodes: [],
+        edges: [],
+      },
+    };
+    newChartData.push(newFile);
+    dispatch(setChartData(newChartData));
+    setCurrentFileIndex(newChartData.length - 1);
+    dispatch(setCurrentFile(newChartData.length - 1));
+    const data = await postFile(user, newFile.fileName, newFile);
+  };
   return (
     <>
       <div className="flex w-full items-center gap-3">
-        <Button color="primary" variant="bordered">
+        <Button color="primary" variant="bordered" onClick={handleNewFile}>
           New
         </Button>
         <Dropdown>
@@ -65,7 +75,7 @@ export default function Header() {
                 key={item._id}
                 onClick={() => {
                   setCurrentFileIndex(index);
-                  dispatch(setCurrentFile(item));
+                  dispatch(setCurrentFile(index));
                 }}
               >
                 {item.fileName}
@@ -88,6 +98,9 @@ export default function Header() {
               fileName: value,
             };
             dispatch(setChartData(newChartData));
+            const chartDataCopy = JSON.parse(JSON.stringify(chartData));
+            chartDataCopy[currentFileIndex].fileName = value;
+            putFile(user, chartDataCopy[currentFileIndex]);
           }}
           style={{
             outline: "none",

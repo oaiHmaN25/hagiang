@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ReactFlow, {
   useNodesState,
@@ -13,13 +13,15 @@ import ReactFlow, {
   applyNodeChanges,
   ControlButton,
   useReactFlow,
-  useNodes,
   BackgroundVariant,
 } from "reactflow";
 import debounce from "lodash.debounce";
 import "reactflow/dist/style.css";
+import throttle from "lodash.throttle";
 import { useDispatch, useSelector } from "react-redux";
 import { chartSlice } from "@/redux/slice/chartSlice";
+import { putFile } from "@/app/service/servicesApi";
+import { useUser } from "@auth0/nextjs-auth0/client";
 
 const initialNodes = [];
 const initialEdges = [];
@@ -30,8 +32,10 @@ interface RootState {
     currentFile: number;
   };
 }
+
 const { setFlowFunc, setChartData } = chartSlice.actions;
 export default function Flowchart() {
+  const { user, error, isLoading } = useUser();
   const dispatch = useDispatch();
   const currentFile = useSelector(
     (state: RootState) => state.chart.currentFile,
@@ -72,8 +76,6 @@ export default function Flowchart() {
     }
   };
 
-  const changeTitleDebounce = debounce(handleChangeTitleNode, 1000);
-
   const handleAddNode = () => {
     const newNode = {
       id: uuidv4(),
@@ -86,6 +88,8 @@ export default function Flowchart() {
   };
 
   const handleClearChart = () => {
+    if (nodes.length === 0) return;
+    if (!window.confirm("Are you sure you want to clear the chart?")) return;
     setNodes([]);
     setEdges([]);
   };
@@ -140,12 +144,34 @@ export default function Flowchart() {
         chart: chartDataSave,
       };
       dispatch(setChartData(newChartData));
-    }, 500);
+    });
   };
 
   const handleSaveFlowDebounce = debounce(handleSaveFlow, 1000);
 
-  return (
+  useEffect(() => {
+    if (chartData[currentFile]?.chart) {
+      handleSaveFlowDebounce();
+      putFile(user, chartData[currentFile]);
+    }
+  }, [nodes.length]);
+
+  function handleNodeDelete(nodesDelete) {
+    const newNodes = [...nodes];
+    const newChartData = [...chartData];
+    nodesDelete.forEach((nodeDelete) => {
+      const index = newNodes.findIndex((n) => n.id === nodeDelete.id);
+      newNodes.splice(index, 1);
+    });
+    newChartData[currentFile] = {
+      ...newChartData[currentFile],
+      chart: { nodes: newNodes, edges },
+    };
+    dispatch(setChartData(newChartData));
+    putFile(user, newChartData[currentFile]);
+  }
+
+  return chartData.length ? (
     <div style={{ width: "100%", height: "70vh", border: "1px solid white" }}>
       <ReactFlow
         nodes={nodes}
@@ -157,17 +183,13 @@ export default function Flowchart() {
         onConnectEnd={onConnectEnd}
         onNodeDoubleClick={handleChangeTitleNode}
         onNodeDragStop={handleSaveFlowDebounce}
+        onNodesDelete={handleNodeDelete}
         fitView
         fitViewOptions={{ padding: 2 }}
         nodeOrigin={[0.5, 0]}
       >
         <MiniMap />
-        <Controls
-          showZoom={false}
-          showFitView={false}
-          showInteractive={false}
-          position="top-left"
-        >
+        <Controls showZoom={false} showFitView={false} position="top-left">
           <ControlButton style={{ width: "80px" }} onClick={handleClearChart}>
             Clear
           </ControlButton>
@@ -197,5 +219,7 @@ export default function Flowchart() {
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
     </div>
+  ) : (
+    <p className="mt-10 text-center text-2xl font-bold">Empty</p>
   );
 }
