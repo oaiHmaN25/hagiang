@@ -34,12 +34,12 @@ export async function GET(request) {
   return NextResponse.json({ user: user || {} });
 }
 
-export async function DELETE(request) {
-  const { id } = request.nextUrl.searchParams.get("id");
-  await connectMongoDB();
-  await User.findByIdAndDelete(id);
-  return NextResponse.json({ message: "Success" }, { status: 200 });
-}
+// export async function DELETE(request) {
+//   const { id } = request.nextUrl.searchParams.get("id");
+//   await connectMongoDB();
+//   await User.findByIdAndDelete(id);
+//   return NextResponse.json({ message: "Success" }, { status: 200 });
+// }
 /*
 
 Post File: POST (body: {
@@ -69,7 +69,7 @@ Sửa file: PUT /idFile?email=email (body: {
 /*
 1. Set lại state khi thực hiện các thay đổi: thêm node, xóa node (Done)
 2. Post file khi thêm file mới (Done)
-3. Put file khi sửa đổi file, vd: thêm node, thêm edge, xóa node, xóa edge, thay đổi tên file,...
-4. Delete file khi xóa file
+3. Put file khi sửa đổi file, vd: thêm node, thêm edge, xóa node, xóa edge, thay đổi tên file,... (Done)
+4. Delete file khi xóa file 
 5. Giật do thay đổi vị trí của node bị set lại state
 */

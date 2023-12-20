@@ -144,6 +144,7 @@ export default function Flowchart() {
         chart: chartDataSave,
       };
       dispatch(setChartData(newChartData));
+      putFile(user, newChartData[currentFile]);
     });
   };
 

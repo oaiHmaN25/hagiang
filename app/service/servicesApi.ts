@@ -47,3 +47,14 @@ export const putFile = async (user, file) => {
     console.log(error);
   }
 };
+
+export const deleteFile = async (user, id) => {
+  try {
+    const data = await fetch(`/api/chart/${id}?email=${user.email}`, {
+      method: "DELETE",
+    });
+    return data;
+  } catch (error) {
+    console.log(error);
+  }
+};

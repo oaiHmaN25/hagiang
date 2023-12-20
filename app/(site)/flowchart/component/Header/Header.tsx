@@ -1,6 +1,6 @@
 "use client";
 import { useUser } from "@auth0/nextjs-auth0/client";
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "react-edit-text/dist/index.css";
 import { EditText } from "react-edit-text";
 import {
@@ -12,8 +12,14 @@ import {
 } from "@nextui-org/react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuidv4 } from "uuid";
-import { fetchData, postFile, putFile } from "@/app/service/servicesApi";
+import {
+  deleteFile,
+  fetchData,
+  postFile,
+  putFile,
+} from "@/app/service/servicesApi";
 import { chartSlice } from "@/redux/slice/chartSlice";
+import Image from "next/image";
 interface RootState {
   chart: {
     flowFunc: any;
@@ -59,6 +65,15 @@ export default function Header() {
     dispatch(setCurrentFile(newChartData.length - 1));
     const data = await postFile(user, newFile.fileName, newFile);
   };
+
+  const handleDeleteFile = async () => {
+    const newChartData = [...chartData];
+    newChartData.splice(currentFileIndex, 1);
+    dispatch(setChartData(newChartData));
+    setCurrentFileIndex(0);
+    dispatch(setCurrentFile(0));
+    const data = await deleteFile(user, chartData[currentFileIndex]._id);
+  };
   return (
     <>
       <div className="flex w-full items-center gap-3">
@@ -77,6 +92,16 @@ export default function Header() {
                   setCurrentFileIndex(index);
                   dispatch(setCurrentFile(index));
                 }}
+                isReadOnly
+                endContent={
+                  <Image
+                    src="/images/flow-chart/trash-bin.png"
+                    alt="Bin"
+                    width={20}
+                    height={20}
+                    onClick={handleDeleteFile}
+                  />
+                }
               >
                 {item.fileName}
               </DropdownItem>
