@@ -91,23 +91,7 @@ const SingleBlogPage = async () => {
                   Tuyên Quang
                 </h2>
 
-                <ul className="mb-9 flex flex-wrap gap-5 2xl:gap-7.5">
-                  <li>
-                    <span className="text-black dark:text-white">Author: </span>{" "}
-                    Đỗ Mai Hương
-                  </li>
-                  <li>
-                    <span className="text-black dark:text-white">
-                      Published On: Dec 28, 2023
-                    </span>{" "}
-                  </li>
-                  <li>
-                    <span className="text-black dark:text-white">
-                      Category :
-                    </span>
-                     Places
-                  </li>
-                </ul>
+    
 
                 <div className="blog-details">
                   <p>
